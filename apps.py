@@ -5,6 +5,9 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer
 from PyPDF2 import PdfReader
 import streamlit as st
 import json
+import warnings
+
+warnings.filterwarnings("ignore")
 
 # SharePoint URL and credentials
 SHAREPOINT_URL = "https://hclo365.sharepoint.com"
