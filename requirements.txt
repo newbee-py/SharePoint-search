@@ -3,10 +3,9 @@ requests_ntlm
 transformers
 PyPDF2
 streamlit
-json
 warnings
 sentence_transformers
 chroma
 torch
-datetime
+
 
