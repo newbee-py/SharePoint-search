@@ -7,7 +7,7 @@ import streamlit as st
 import json
 import warnings
 from sentence_transformers import SentenceTransformer
-import faiss  # Or chroma, etc.
+import chroma  # Importing Chroma instead of FAISS
 import torch
 import datetime
 
@@ -48,14 +48,8 @@ except Exception as e:
     st.error("Error loading embedding model. Check error logs.")
     st.stop()
 
-# Vector database (FAISS example)
-d = 768  # Dimensionality of embeddings (adjust if needed)
-try:
-    index = faiss.IndexFlatL2(d)  # Create a flat L2 index. For larger datasets, explore other indexes
-except Exception as e:
-    log_error(f"Error creating FAISS index: {e}")
-    st.error("Error creating vector database. Check error logs.")
-    st.stop()
+# Vector database (Chroma example)
+index = chroma.Index()
 
 # Function to authenticate with SharePoint
 def authenticate():
@@ -117,13 +111,13 @@ def chunk_text(text, chunk_size=500, overlap=50):
 def embed_and_add(text_chunks):
     for chunk in text_chunks:
         embedding = embedding_model.encode(chunk)
-        index.add(embedding.reshape(1, -1))  # FAISS requires a 2D array
+        index.add(chunk, embedding.tolist())  # Chroma takes text and embedding as list
 
 # Function to query the vector database
 def query_database(query, k=5):  # k = number of similar chunks to retrieve
     query_embedding = embedding_model.encode(query)
-    D, I = index.search(query_embedding.reshape(1, -1), k)  # Search the index
-    return I.tolist()[0]  # Return the indices of the most similar chunks. Get the first set of indices
+    results = index.search(query_embedding.tolist(), top_n=k)  # Search the index
+    return [res["id"] for res in results]  # Return the ids of the most similar chunks
 
 # Function to generate response (with error handling)
 def generate_response(query, context):
