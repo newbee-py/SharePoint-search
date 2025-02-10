@@ -2,5 +2,5 @@ requests_ntlm
 PyPDF2
 transformers
 streamlit
-torch==1.12.1
-torchvision==0.13.1
+torch
+torchvision
