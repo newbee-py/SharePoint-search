@@ -1,8 +1,3 @@
-!pip install requests_ntlm
-!pip install PyPDF2
-!pip install transformers
-!pip install streamlit
-
 import os
 import requests
 from requests_ntlm import HttpNtlmAuth
