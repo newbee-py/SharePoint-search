@@ -1,0 +1,4 @@
+requests_ntlm
+PyPDF2
+transformers
+streamlit
