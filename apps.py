@@ -64,7 +64,7 @@ def authenticate():
 
 # Function to recursively get PDF files from SharePoint
 def get_pdf_files(auth, folder_url=DOCUMENT_LIBRARY_URL):
-    all_pdfs = # Corrected: Initialize as an empty list
+    all_pdfs = []  # Corrected: Initialize as an empty list
     try:
         url = f"{SHAREPOINT_URL}{SITE_URL}{folder_url}/_api/web/GetFolderByServerRelativeUrl('{folder_url}')/Files"
         headers = {"Accept": "application/json;odata=verbose"}
@@ -86,10 +86,10 @@ def get_pdf_files(auth, folder_url=DOCUMENT_LIBRARY_URL):
         return all_pdfs
     except requests.exceptions.RequestException as e:
         log_error(f"Error accessing SharePoint: {e}")
-        return
+        return [] # Return empty list in case of errors
     except (json.JSONDecodeError, KeyError) as e:
         log_error(f"Error processing SharePoint response: {e}")
-        return
+        return [] # Return empty list in case of errors
 
 # Function to read PDF file contents
 def read_pdf_contents(pdf_file):
@@ -105,7 +105,7 @@ def read_pdf_contents(pdf_file):
 
 # Function to chunk text
 def chunk_text(text, chunk_size=500, overlap=50):
-    chunks = # Corrected: Initialize as an empty list
+    chunks = []  # Corrected: Initialize as an empty list
     start = 0
     while start < len(text):
         end = min(start + chunk_size, len(text))
@@ -123,7 +123,7 @@ def embed_and_add(text_chunks):
 def query_database(query, k=5):  # k = number of similar chunks to retrieve
     query_embedding = embedding_model.encode(query)
     D, I = index.search(query_embedding.reshape(1, -1), k)  # Search the index
-    return I.tolist()  # Return the indices of the most similar chunks
+    return I.tolist()[0]  # Return the indices of the most similar chunks. Get the first set of indices
 
 # Function to generate response (with error handling)
 def generate_response(query, context):
@@ -142,7 +142,7 @@ st.title("PDF Search and Analysis")
 
 # Initialize session state
 if "chat_history" not in st.session_state:
-    st.session_state.chat_history =
+    st.session_state.chat_history = []
 
 # Get user input
 user_input = st.text_input("Enter your query:", "")
@@ -154,21 +154,25 @@ if st.button("Submit"):
         pdf_files = get_pdf_files(auth)
 
         if pdf_files:
-            all_text_chunks =  # List to hold all chunks from all PDFs
+            all_text_chunks = []  # List to hold all chunks from all PDFs
             for pdf_file in pdf_files:
-                pdf_contents = read_pdf_contents(pdf_file)
-                if pdf_contents:
-                    text_chunks = chunk_text(pdf_contents)
-                    all_text_chunks.extend(text_chunks)  # Add chunks to the list
+                try: # Try to read each file, handle errors gracefully
+                    pdf_contents = read_pdf_contents(pdf_file)
+                    if pdf_contents:
+                        text_chunks = chunk_text(pdf_contents)
+                        all_text_chunks.extend(text_chunks)  # Add chunks to the list
+                except Exception as e:
+                    log_error(f"Error processing a PDF file: {e}")
+                    st.write(f"Error processing a PDF file: {e}")
 
-            if all_text_chunks: # Check if any chunks were generated
+            if all_text_chunks:  # Check if any chunks were generated
                 embed_and_add(all_text_chunks)  # Embed all chunks at once
 
                 # Now query:
                 similar_chunk_indices = query_database(user_input)
                 context = ""
                 for i in similar_chunk_indices:
-                    context += all_text_chunks[i] + "\n\n" # Use all_text_chunks
+                    context += all_text_chunks[i] + "\n\n"  # Use all_text_chunks
 
                 response = generate_response(user_input, context)
                 st.session_state.chat_history.append({"user": user_input, "response": response})
@@ -178,12 +182,4 @@ if st.button("Submit"):
             st.write("No PDF files found in the specified SharePoint folder.")
 
     except Exception as e:
-        log_error(f"A general error occurred: {e}")
-        st.error("An error occurred. Check error logs.")
-
-# Display chat history
-st.write("Chat History:")
-for chat in st.session_state.chat_history:
-    st.write(f"User: {chat['user']}")
-    st.write(f"Response: {chat['response']}")
-    st.write("")
+        log_error(f"A general error occurred: {e}") # Log
