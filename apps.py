@@ -38,7 +38,6 @@ except Exception as e:
     st.error("Error loading LLM. Check error logs.")
     st.stop()  # Stop Streamlit execution
 
-
 # Embedding model
 EMBEDDING_MODEL_NAME = "all-mpnet-base-v2"  # Or another good embedding model
 try:
@@ -81,10 +80,10 @@ def get_pdf_files(auth, folder_url=DOCUMENT_LIBRARY_URL):
         return all_pdfs
     except requests.exceptions.RequestException as e:
         log_error(f"Error accessing SharePoint: {e}")
-        return [] # Return empty list in case of errors
+        return []  # Return empty list in case of errors
     except (json.JSONDecodeError, KeyError) as e:
         log_error(f"Error processing SharePoint response: {e}")
-        return [] # Return empty list in case of errors
+        return []  # Return empty list in case of errors
 
 # Function to read PDF file contents
 def read_pdf_contents(pdf_file):
@@ -151,7 +150,7 @@ if st.button("Submit"):
         if pdf_files:
             all_text_chunks = []  # List to hold all chunks from all PDFs
             for pdf_file in pdf_files:
-                try: # Try to read each file, handle errors gracefully
+                try:  # Try to read each file, handle errors gracefully
                     pdf_contents = read_pdf_contents(pdf_file)
                     if pdf_contents:
                         text_chunks = chunk_text(pdf_contents)
@@ -159,3 +158,6 @@ if st.button("Submit"):
                 except Exception as e:
                     log_error(f"Error processing a PDF file: {e}")
                     st.write(f"Error processing a PDF file: {e}")
+    except Exception as main_e:
+        log_error(f"Error processing user input: {main_e}")
+        st.write(f"Error processing user input: {main_e}")
