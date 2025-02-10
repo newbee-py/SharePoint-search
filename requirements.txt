@@ -1,8 +1,13 @@
+os
+requests
 requests_ntlm
-PyPDF2
 transformers
+PyPDF2
 streamlit
-torch
-torchvision
+json
+warnings
 sentence_transformers
-# faiss is not available on PyPI, install using conda: conda install -c conda-forge faiss
+chroma
+torch
+datetime
+
