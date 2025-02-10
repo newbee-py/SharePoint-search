@@ -4,7 +4,6 @@ transformers
 streamlit
 torch
 torchvision
-json5
 sentence_transformers
 faiss
 chroma
