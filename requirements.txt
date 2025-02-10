@@ -4,7 +4,7 @@ transformers
 PyPDF2
 streamlit
 sentence_transformers
-chroma
+chromadb
 torch
 
 
