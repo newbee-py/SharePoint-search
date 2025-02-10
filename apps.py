@@ -7,7 +7,7 @@ import streamlit as st
 import json
 import warnings
 from sentence_transformers import SentenceTransformer
-import chroma  # Importing Chroma instead of FAISS
+import chromadb  # Importing ChromaDB
 import torch
 import datetime
 
@@ -48,8 +48,9 @@ except Exception as e:
     st.error("Error loading embedding model. Check error logs.")
     st.stop()
 
-# Vector database (Chroma example)
-index = chroma.Index()
+# Vector database (ChromaDB example)
+chroma_client = chromadb.Client()
+chroma_collection = chroma_client.create_collection(name="my_collection")
 
 # Function to authenticate with SharePoint
 def authenticate():
@@ -110,14 +111,14 @@ def chunk_text(text, chunk_size=500, overlap=50):
 # Function to embed and add to vector database
 def embed_and_add(text_chunks):
     for chunk in text_chunks:
-        embedding = embedding_model.encode(chunk)
-        index.add(chunk, embedding.tolist())  # Chroma takes text and embedding as list
+        embedding = embedding_model.encode(chunk).tolist()
+        chroma_collection.add(documents=[chunk], embeddings=[embedding])
 
 # Function to query the vector database
 def query_database(query, k=5):  # k = number of similar chunks to retrieve
-    query_embedding = embedding_model.encode(query)
-    results = index.search(query_embedding.tolist(), top_n=k)  # Search the index
-    return [res["id"] for res in results]  # Return the ids of the most similar chunks
+    query_embedding = embedding_model.encode(query).tolist()
+    results = chroma_collection.query(query_embeddings=[query_embedding], n_results=k)
+    return [res["document"] for res in results["documents"]]
 
 # Function to generate response (with error handling)
 def generate_response(query, context):
@@ -158,22 +159,3 @@ if st.button("Submit"):
                 except Exception as e:
                     log_error(f"Error processing a PDF file: {e}")
                     st.write(f"Error processing a PDF file: {e}")
-
-            if all_text_chunks:  # Check if any chunks were generated
-                embed_and_add(all_text_chunks)  # Embed all chunks at once
-
-                # Now query:
-                similar_chunk_indices = query_database(user_input)
-                context = ""
-                for i in similar_chunk_indices:
-                    context += all_text_chunks[i] + "\n\n"  # Use all_text_chunks
-
-                response = generate_response(user_input, context)
-                st.session_state.chat_history.append({"user": user_input, "response": response})
-            else:
-                st.write("No PDF content could be extracted.")
-        else:
-            st.write("No PDF files found in the specified SharePoint folder.")
-
-    except Exception as e:
-        log_error(f"A general error occurred: {e}") # Log
