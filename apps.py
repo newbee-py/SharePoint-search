@@ -65,3 +65,24 @@ for chat in st.session_state.chat_history:
     st.write(f"User: {chat['user']}")
     st.write(f"Response: {chat['response']}")
     st.write("")
+
+#Error Handling
+print(response.content)
+print(response.status_code)
+def get_pdf_files(auth):
+    url = f"{SHAREPOINT_URL}{SITE_URL}{DOCUMENT_LIBRARY_URL}/_api/web/GetFolderByServerRelativeUrl('{DOCUMENT_LIBRARY_URL}')/Files"
+    headers = {"Accept": "application/json;odata=verbose"}
+    response = requests.get(url, auth=auth, headers=headers)
+    if response.status_code != 200:
+        print(f"Error: {response.status_code}")
+        return []
+    try:
+        files = response.json()["d"]["results"]
+        pdf_files = [file for file in files if file["__metadata"]["type"] == "SP.File" and file["Name"].endswith(".pdf")]
+        return pdf_files
+    except json.JSONDecodeError as e:
+        print(f"Error parsing JSON: {e}")
+        return []
+    except KeyError as e:
+        print(f"Error accessing JSON key: {e}")
+        return []
