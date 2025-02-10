@@ -3,7 +3,6 @@ requests_ntlm
 transformers
 PyPDF2
 streamlit
-warnings
 sentence_transformers
 chroma
 torch
