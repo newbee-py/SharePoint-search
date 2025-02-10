@@ -4,3 +4,8 @@ transformers
 streamlit
 torch
 torchvision
+json
+sentence_transformers
+faiss
+chroma
+dateline
