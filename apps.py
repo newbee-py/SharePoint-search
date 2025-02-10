@@ -64,7 +64,7 @@ def authenticate():
 
 # Function to recursively get PDF files from SharePoint
 def get_pdf_files(auth, folder_url=DOCUMENT_LIBRARY_URL):
-    all_pdfs =
+    all_pdfs = # Corrected: Initialize as an empty list
     try:
         url = f"{SHAREPOINT_URL}{SITE_URL}{folder_url}/_api/web/GetFolderByServerRelativeUrl('{folder_url}')/Files"
         headers = {"Accept": "application/json;odata=verbose"}
@@ -105,7 +105,7 @@ def read_pdf_contents(pdf_file):
 
 # Function to chunk text
 def chunk_text(text, chunk_size=500, overlap=50):
-    chunks =
+    chunks = # Corrected: Initialize as an empty list
     start = 0
     while start < len(text):
         end = min(start + chunk_size, len(text))
@@ -154,20 +154,26 @@ if st.button("Submit"):
         pdf_files = get_pdf_files(auth)
 
         if pdf_files:
+            all_text_chunks =  # List to hold all chunks from all PDFs
             for pdf_file in pdf_files:
                 pdf_contents = read_pdf_contents(pdf_file)
                 if pdf_contents:
                     text_chunks = chunk_text(pdf_contents)
-                    embed_and_add(text_chunks)  # Embed chunks from each PDF
+                    all_text_chunks.extend(text_chunks)  # Add chunks to the list
 
-            # Now query:
-            similar_chunk_indices = query_database(user_input)
-            context = ""
-            for i in similar_chunk_indices:
-                context += text_chunks[i] + "\n\n"
+            if all_text_chunks: # Check if any chunks were generated
+                embed_and_add(all_text_chunks)  # Embed all chunks at once
 
-            response = generate_response(user_input, context)
-            st.session_state.chat_history.append({"user": user_input, "response": response})
+                # Now query:
+                similar_chunk_indices = query_database(user_input)
+                context = ""
+                for i in similar_chunk_indices:
+                    context += all_text_chunks[i] + "\n\n" # Use all_text_chunks
+
+                response = generate_response(user_input, context)
+                st.session_state.chat_history.append({"user": user_input, "response": response})
+            else:
+                st.write("No PDF content could be extracted.")
         else:
             st.write("No PDF files found in the specified SharePoint folder.")
 
