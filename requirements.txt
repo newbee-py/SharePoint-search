@@ -6,5 +6,6 @@ streamlit
 sentence_transformers
 chromadb
 torch
+pinecone
 
 
