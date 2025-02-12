@@ -7,7 +7,7 @@ sentence_transformers
 chromadb
 torch
 pinecone
-pysqlite3
+sqlite3
 
 
 
